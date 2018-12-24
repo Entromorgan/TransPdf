@@ -27,6 +27,6 @@ Add support for exporting translation into docx files
 
 Pack up and reform into a single executable file
 
-Fix format issues (like words with letters "fi" will be weird after text extration from a pdf file)
+Fix format issues (like words with letters "fi" will be weird after text extration from a pdf file, pictures, equations etc.)
 
-Fix JSON Empty issues in googletrans (temporarily fix by eliminating characters whose ascii value bigger than 127)
+Fix JSON empty issues in googletrans (temporarily fix by eliminating characters whose ascii value bigger than 127)
