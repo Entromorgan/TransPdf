@@ -5,9 +5,9 @@ Extracting text from pdf files and translate the text into designated language b
 Python 3.4+
 
 ## Set up
-sudo -H pip3 install googletrans
+pip3 install googletrans
 
-sudo -H pip3 install pdfminer.six
+pip3 install pdfminer.six
 
 ## Basic usage
 python3 translate.py # translate all pdf files under current directory
