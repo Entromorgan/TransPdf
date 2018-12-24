@@ -15,6 +15,13 @@ python3 translate.py # translate all pdf files under current directory
 ## Advanced usage
 python3 translate.py -h # print all detailed helping messages
 
+## Ref
+googletrans: https://github.com/ssut/py-googletrans
+
+pdfminer: https://github.com/pdfminer/pdfminer.six
+
+google translate api: https://cloud.google.com/translate/
+
 ## TODO
 Add support for exporting translation into docx files
 
