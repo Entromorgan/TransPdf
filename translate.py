@@ -216,6 +216,7 @@ def main(args=None):
 	pdf_list = list_pdf(A.path)
 	for pdf_file in pdf_list:
 		print("Translating " + pdf_file + " ...")
+		pdf_file = pdf_file.replace(" ", "_")
 		batches = preprocessing(os.path.join(A.path, pdf_file), A.batch_size)
 		index = 1
 		for mini_batch in batches:
