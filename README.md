@@ -32,3 +32,5 @@ Fix filename issues (input filename indifference)
 Fix format issues (like words with letters "fi" will be weird after text extration from a pdf file, pictures, equations etc.)
 
 Fix JSON empty issues in googletrans (temporarily fix by eliminating characters whose ascii value bigger than 127)
+
+Fix translated text out-of-order problem
