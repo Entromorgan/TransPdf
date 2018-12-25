@@ -40,7 +40,7 @@ def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list): #
 	loops = int(len(content) / max_batch_size)
 	loop_num = 1;
 	while loop_num <= loops:
-		print("Processing mini batch [" + str(loop_num) + "/" + str(loops) + "]")
+		print("Generating mini batch [" + str(loop_num) + "/" + str(loops) + "]")
 		mini_batch = content[index:index + max_batch_size]
 		mini_batch = sub_sentence + mini_batch
 		sub_sentence = ""
@@ -52,7 +52,7 @@ def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list): #
 		mini_batch = ""
 		index += max_batch_size
 		loop_num += 1
-	print("Processing mini batch [" + str(loop_num) + "/" + str(loops+1) + "]")
+	print("Generating mini batch [" + str(loop_num) + "/" + str(loops+1) + "]")
 	batches.append(chr(96+loop_num) + sub_sentence + content[index:])
 	print("Split success!")
 
@@ -216,15 +216,15 @@ def main(args=None):
 	pdf_list = list_pdf(A.path)
 	for pdf_file in pdf_list:
 		print("Translating " + pdf_file + " ...")
-		pdf_file = pdf_file.replace(" ", "_")
 		batches = preprocessing(os.path.join(A.path, pdf_file), A.batch_size)
 		index = 1
 		for mini_batch in batches:
 			print("Translating mini batch [" + str(index) + "/" + str(len(batches)) + "]")
 			translated_text += translate(translator, mini_batch[1:], A.src, A.dest) # remove mini batch number label before translation
 			index += 1
-		with open(pdf_file.replace(".pdf", "_trans.txt"), 'w', encoding='utf8') as transfile:
+		with open(os.path.join(A.path, pdf_file.replace(".pdf", "_trans.txt")), 'w', encoding='utf8') as transfile:
 			transfile.write(translated_text)
+			print('Translation success!')
 			translated_text=""
 
 	if A.flush:
