@@ -11,6 +11,7 @@ pip3 install pdfminer.six
 
 ## Basic usage
 python3 translate.py -a # translate all pdf files under current directory
+
 python3 translate.py -n test.pdf # translate test.pdf under current directory
 
 ## Advanced usage
