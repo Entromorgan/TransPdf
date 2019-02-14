@@ -6,6 +6,8 @@ from googletrans import Translator
 
 
 eos_punc_list = ['.', ';', '?', '!'] # punctuations that can mark the end of a sentence
+file_name_map = {} # the map of file name and name index, format: key-name_index, value-filename
+appendix = {'raw':'_raw.txt', 'strip':'_strip.txt', 'translate':'_trans.txt'} # the appendix define in this program
 
 
 def find_sub_index(mini_batch, eos_punc_list=eos_punc_list): # find the optimal seperation of subsentence
@@ -17,21 +19,21 @@ def find_sub_index(mini_batch, eos_punc_list=eos_punc_list): # find the optimal 
 	return max(sub_index_list)
 
 
-def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list): # parse input pdf file into mini batches whose sizes are smaller than max_batch_size bytes
+def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list, app=appendix): # parse input pdf file into mini batches whose sizes are smaller than max_batch_size bytes
 
-	print("Extracting text from " + filename + " ...")
-	os.system("pdf2txt.py " + filename + " -o " + filename.replace(".pdf", "_raw.txt"))  # extract text from pdf, save as filename_raw.txt
-	print("Extraction success!")
+	print("		Extracting text ...")
+	os.system("pdf2txt.py " + filename + " -o " + filename.replace(".pdf", app['raw']))  # extract text from pdf, save as filename_raw.txt
+	print("		Extraction success!")
 	
-	print("Replacing line breaks ...")
-	with open(filename.replace(".pdf", "_raw.txt"), 'r', encoding='utf8') as rawfile:
+	print("		Replacing line breaks ...")
+	with open(filename.replace(".pdf", app['raw']), 'r', encoding='utf8') as rawfile:
 		content = rawfile.read().replace("\n", " ")
-		with open(filename.replace(".pdf", "_strip.txt"), 'w', encoding='utf8') as stripfile:
+		with open(filename.replace(".pdf", app['strip']), 'w', encoding='utf8') as stripfile:
 			content = ''.join([i for i in content if ord(i)<127]) # remove characters that have ascii value bigger than 126
 			stripfile.write(content)
-	print("Replacement success!")
+	print("		Replacement success!")
 
-	print("Spliting text into mini batches ...")
+	print("		Spliting text into mini batches ...")
 	batches = []
 	mini_batch = ""
 	sub_sentence = ""
@@ -40,7 +42,6 @@ def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list): #
 	loops = int(len(content) / max_batch_size)
 	loop_num = 1;
 	while loop_num <= loops:
-		print("Generating mini batch [" + str(loop_num) + "/" + str(loops) + "]")
 		mini_batch = content[index:index + max_batch_size]
 		mini_batch = sub_sentence + mini_batch
 		sub_sentence = ""
@@ -52,9 +53,8 @@ def preprocessing(filename, max_batch_size=4600, eos_punc_list=eos_punc_list): #
 		mini_batch = ""
 		index += max_batch_size
 		loop_num += 1
-	print("Generating mini batch [" + str(loop_num) + "/" + str(loops+1) + "]")
 	batches.append(chr(96+loop_num) + sub_sentence + content[index:])
-	print("Split success!")
+	print("		Split success!")
 
 	return sorted(batches)
 
@@ -75,6 +75,8 @@ def maketheparser(): # initialize the parser
     parser.add_argument("-b", "--batch_size", type=int, default=4600, help="Max batch size of a mini batch.")
     parser.add_argument("-l", "--language", default=False, action="store_true", help="List all supported src & dest languages.")
     parser.add_argument("-f", "--flush", default=False, action="store_true", help="Clear all temp files.")
+    parser.add_argument("-a", "--all", default=False, action="store_true", help="Parse all pdf files under working path.")
+    parser.add_argument("-n", "--name", type=str, default='test.pdf', help="Specify the name of the translating file.")
 
     return parser
 
@@ -187,17 +189,46 @@ def language_helper(): # list all the languages supported (Ref: https://cloud.go
 			祖鲁语					zu")
 
 
+def list_file(path): # list all files under designated path
+
+	file_list = []
+	whole_list = os.listdir(path)
+	for obj in whole_list:
+		if os.path.isfile(os.path.join(path, obj)):  # if current obj is a file
+			file_list.append(obj)
+
+	return file_list
+
+
 def list_pdf(path): # list all pdf files under designated path
 
-	whole_list = os.listdir(path)
 	pdf_list = []
+	whole_list = list_file(path)
 	for obj in whole_list:
-		path_file = os.path.join(path,obj) # obtain absolute file path 
-		if os.path.isfile(path_file):  # if current obj is a file
-			if '.pdf' in obj: # is a pdf file
-				pdf_list.append(obj)
+		if '.pdf' in obj: # is a pdf file
+			pdf_list.append(obj)
 
 	return pdf_list
+
+
+def file_name_mapping(path, pdf_list): # mapping file name into name index
+
+	name_index = 0
+	for pdf_file in pdf_list:
+		name_index += 1
+		file_name_map[name_index] = pdf_file
+		os.rename(os.path.join(path, pdf_file), os.path.join(path, str(name_index)) + ".pdf")
+	pdf_list = list_pdf(path)
+
+	return pdf_list, name_index
+
+
+def file_name_remapping(path, name_index, map_dic=file_name_map, app=appendix): # mapping name index into file name
+
+	for index in range(1, name_index + 1):
+		os.rename(os.path.join(path, str(index) + ".pdf"), os.path.join(path, file_name_map[index])) # rename original files
+		for _, value in app.items():
+			os.rename(os.path.join(path, str(index) + value), os.path.join(path, file_name_map[index].replace(".pdf", value))) # rename temp and output files
 
 
 def main(args=None):
@@ -213,24 +244,33 @@ def main(args=None):
 
 	translated_text = "" # initizalize output string
 
-	pdf_list = list_pdf(A.path)
-	for pdf_file in pdf_list:
-		print("Translating " + pdf_file + " ...")
-		batches = preprocessing(os.path.join(A.path, pdf_file), A.batch_size)
-		index = 1
+	pdf_list = []
+	if A.all:
+		pdf_list = list_pdf(A.path)
+	else:
+		pdf_list.append(A.name)
+
+	vpdf_list, name_index = file_name_mapping(A.path, pdf_list)
+	
+	for index in range(len(pdf_list)):
+		print("Translating progress [" + str(index+1) + "/" + str(len(pdf_list)) + "]")
+		print("	Translating " + pdf_list[index] + " ...")
+		batches = preprocessing(os.path.join(A.path, vpdf_list[index]), A.batch_size)
 		for mini_batch in batches:
-			print("Translating mini batch [" + str(index) + "/" + str(len(batches)) + "]")
 			translated_text += translate(translator, mini_batch[1:], A.src, A.dest) # remove mini batch number label before translation
-			index += 1
-		with open(os.path.join(A.path, pdf_file.replace(".pdf", "_trans.txt")), 'w', encoding='utf8') as transfile:
+		with open(os.path.join(A.path, vpdf_list[index].replace(".pdf", appendix['translate'])), 'w', encoding='utf8') as transfile:
 			transfile.write(translated_text)
-			print('Translation success!')
+			print('	Translation success!')
 			translated_text=""
+	print("Translation finish.")
+
+	file_name_remapping(A.path, name_index)
 
 	if A.flush:
 		for pdf_file in pdf_list:
-			os.remove(os.path.join(A.path, pdf_file.replace(".pdf", "_raw.txt")))
-			os.remove(os.path.join(A.path, pdf_file.replace(".pdf", "_strip.txt")))
+			for key, value in appendix.items():
+				if key != 'translate':
+					os.remove(os.path.join(A.path, pdf_file.replace(".pdf", value)))
 
 	return 0
 
