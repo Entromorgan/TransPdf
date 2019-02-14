@@ -10,7 +10,9 @@ pip3 install googletrans
 pip3 install pdfminer.six
 
 ## Basic usage
-python3 translate.py # translate all pdf files under current directory
+python3 translate.py -a # translate all pdf files under current directory
+
+python3 translate.py -n test.pdf # translate test.pdf under current directory
 
 ## Advanced usage
 python3 translate.py -h # print all detailed helping messages
@@ -26,8 +28,6 @@ google translate api: https://cloud.google.com/translate/
 Add support for exporting translation into docx files
 
 Pack up and reform into a single executable file
-
-Fix filename issues (input filename indifference)
 
 Fix format issues (like words with letters "fi" will be weird after text extration from a pdf file, pictures, equations etc.)
 
