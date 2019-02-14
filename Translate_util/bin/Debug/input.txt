@@ -1,0 +1,30 @@
+Based on the data mapping and processing scheme, the
+overall architecture of PERMDNN computing engine is shown
+in Fig. 6. The entire design consists of an array of NPE
+PEs that perform the kernel M  V operations and the nonlinear
+activation operations. After all the yi¡¯s, the entries of
+output activation vector y for the current FC layer, have been
+calculated and stored in the PEs, they are then written to
+the activation SRAM. The writing operation is performed
+in a group-writing manner: the entire activation SRAM is
+partitioned into NACTMB banks, where each SRAM bank is
+in charge of the yi¡¯s from NACC=NPE PEs. In each clock
+cycle, among all the PEs that belong to the same SRAM
+bank, one of them outputs WACTM=q activation values yi¡¯s to
+its corresponding SRAM bank, where WACTM and q are the
+width of activation SRAM and the bit-width of yi, respectively.
+Consider there are in total NACTMBWACTM=q yi¡¯s that are
+simultaneously written to the activation SRAM in one cycle.
+An activation routing network is designed to ensure each yi is
+correctly written to the target position in the activation SRAM.
+In the reading phase of activation SRAM, as described in
+Section IV-A, each time only one non-zero activation value xi
+is fetched and broadcasted to all the PEs. To achieve that, with
+the help of control signals from main controller, an activation
+selector is designed to select the correct xi from multiple
+activation SRAM banks. After the examination from a zerodetector,
+the non-zero xi is then sent to an activation FIFO for
+its broadcast to PE arrays. The purpose of using this activation
+FIFO is to build up a backlog for the non-zero xi¡¯s, thereby
+ensuring that the PEs can always receive their required xi for
+the current computation in time.

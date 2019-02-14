@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1545554789 source:d:\learning\code\translate_util\main.cpp
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<algorithm>
+
